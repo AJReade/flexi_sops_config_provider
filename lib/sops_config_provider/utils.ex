@@ -32,18 +32,32 @@ defmodule SopsConfigProvider.Utils do
 
   @spec resolve_secret_file_location!(State.t()) :: State.t()
   def resolve_secret_file_location!(
-        %State{app_name: app_name, secret_file_path: secret_file_path} = state
-      ) do
-    file_path =
-      app_name
-      |> Application.app_dir(secret_file_path)
+          %State{app_name: app_name, secret_file_path: secret_file_path} = state
+        ) do
+      file_path =
+        app_name
+        |> Application.app_dir(secret_file_path)
 
-    unless file_path |> File.exists?() do
-      raise SecretFileNotFoundError, file_path
+      state =
+        if env_variables != [] do
+          # Extract the current environment variable value safely
+          [{"SOPS_AGE_KEY_FILE", file_name} | _] = env_variables
+
+          # Compute the full file path
+          full_file_path = Application.app_dir(app_name, file_name)
+
+          # Update the state with the new env_variables list
+          %{state | env_variables: [{"SOPS_AGE_KEY_FILE", full_file_path}]}
+        else
+          state
+        end
+
+      unless file_path |> File.exists?() do
+        raise SecretFileNotFoundError, file_path
+      end
+
+      state |> Map.put(:secret_file_path, file_path) |> State.ensure_type!()
     end
-
-    state |> Map.put(:secret_file_path, file_path) |> State.ensure_type!()
-  end
 
   @spec get_file_type(State.t()) :: State.t()
   def get_file_type(%State{secret_file_path: secret_file_path} = state) do
