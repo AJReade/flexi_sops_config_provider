@@ -39,9 +39,9 @@ defmodule SopsConfigProvider.Utils do
         |> Application.app_dir(secret_file_path)
 
       state =
-        if env_variables != [] do
+        if state.env_variables != [] do
           # Extract the current environment variable value safely
-          [{"SOPS_AGE_KEY_FILE", file_name} | _] = env_variables
+          [{"SOPS_AGE_KEY_FILE", file_name} | _] = state.env_variables
 
           # Compute the full file path
           full_file_path = Application.app_dir(app_name, file_name)
