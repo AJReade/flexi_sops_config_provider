@@ -44,4 +44,14 @@ defmodule SopsConfigProvider do
       sops_config
     )
   end
+
+
+def to_keyword(%State{} = state) do
+      state
+      |> Sops.check_sops_availability!()
+      |> Utils.resolve_secret_file_location!()
+      |> Utils.get_file_type()
+      |> Sops.decrypt!()
+      |> Utils.convert_to_keyword_list!()
+  end
 end
